@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-
 class Language(models.Model):
     # This model is auto populated with an update in the initial migration file
     name = models.CharField(max_length=50)
@@ -9,7 +8,6 @@ class Language(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.iso_code}"
-
 
 class Organization(models.Model):
     name = models.CharField(max_length=80)
@@ -21,7 +19,6 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class OrganizationMember(models.Model):
     class Meta:
