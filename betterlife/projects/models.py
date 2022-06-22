@@ -28,7 +28,7 @@ class ProjectMember(models.Model):
     class Meta:
         unique_together = ('user', 'project',)
         verbose_name_plural = "Project members"
-        # Make sure the is only 1 owner per project
+        # Make sure there is only 1 owner per project
         constraints = [
             UniqueConstraint(fields=['project'], condition=Q(role='OWNER'), name='unique_project_owner')
         ]
@@ -46,3 +46,13 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"User: {self.user} ({self.role}) in the project: {self.project}"
+
+class Comment(models.Model):
+    content = models.TextField()
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    reply_to_comment = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.content
