@@ -75,7 +75,6 @@ class CheckOrganizationMemberObjPermission(permissions.BasePermission):
                 organization=obj.organization, 
                 role='ADMIN'
             )
-            print(membership)
             if membership:
                 return True
 

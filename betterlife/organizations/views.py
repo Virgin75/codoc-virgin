@@ -34,8 +34,8 @@ class ListCreateOrganization(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        org = self.perform_create(serializer)
-        org.members.add(
+        organization = self.perform_create(serializer)
+        organization.members.add(
             request.user,
             through_defaults={'role': 'ADMIN'}
         )

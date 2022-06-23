@@ -17,7 +17,7 @@ class Project(models.Model):
     description = models.TextField()
     goal = models.ForeignKey(ProjectGoal, on_delete=models.SET_NULL, null=True)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='ProjectMember')
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='ProjectMember', related_name='projects')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
