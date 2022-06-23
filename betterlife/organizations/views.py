@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +12,9 @@ from .models import (
 )
 from .permissions import (
     IsSuperUser,
-    CheckOrganizationPermission,
+    CheckOrganizationObjPermission,
+    CheckOrganizationMemberPermission,
+    CheckOrganizationMemberObjPermission,
 )
 from .paginations import x20ResultsPerPage
 
@@ -43,13 +45,24 @@ class ListCreateOrganization(generics.ListCreateAPIView):
 
 class RetrieveUpdateDestroyOrganization(generics.RetrieveUpdateDestroyAPIView):
     queryset = Organization.objects.all()
-    permission_classes = [IsAuthenticated, CheckOrganizationPermission]
+    permission_classes = [IsAuthenticated, CheckOrganizationObjPermission]
     serializer_class = OrganizationSerializer
     lookup_field = 'pk'
 
+class ListCreateOrganizationMember(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, CheckOrganizationMemberPermission]
+    serializer_class = OrganizationMemberSerializer
+    queryset = OrganizationMember.objects.all()
+    pagination_class = x20ResultsPerPage
 
-# ListOrganisationMember (Admin or member) --> Superusers OR or all org members (for LIST: with ?role=admin OR member)
-# CreateOrganisationMember (Admin or member) --> Superusers OR org admin
-# RetrieveOrganizationMember --> superusers OR all org members
-# UpdateOrganizationMember --> superusers OR org admin
-# DestroyOrganizationMember --> superusers OR org admin
+    def get_queryset(self):
+        organization_id = self.request.GET.get('organization_id')
+        organization = get_object_or_404(Organization, id=organization_id)
+
+        return OrganizationMember.objects.filter(organization=organization)
+
+class RetrieveUpdateDestroyOrganizationMember(generics.RetrieveUpdateDestroyAPIView):
+    queryset = OrganizationMember.objects.all()
+    permission_classes = [IsAuthenticated, CheckOrganizationMemberObjPermission]
+    serializer_class = OrganizationMemberSerializer
+    lookup_field = 'pk'
