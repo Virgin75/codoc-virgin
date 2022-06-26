@@ -100,8 +100,8 @@ class CheckProjectMemberPermission(permissions.BasePermission):
 class CheckProjectMemberObjPermission(permissions.BasePermission):
     """
     Permission used in RetrieveUpdateDestroy ProjectMember APIView:
-    > The list of project members is only available to company/project members
-    > Only org admins can create a new project member
+    > Anyone within an org or a project can retrieve the related member details
+    > Only org admins can update or delete a Project memebr
     """
     def has_object_permission(self, request, view, obj):
         project = obj.project
@@ -112,7 +112,6 @@ class CheckProjectMemberObjPermission(permissions.BasePermission):
         )
         project_membership = project.members.filter(id=request.user.id)
 
-        print(request.user, org_membership, project_membership)
         if request.method == 'GET':
             if request.user.is_superuser:
                 return True
@@ -129,6 +128,73 @@ class CheckProjectMemberObjPermission(permissions.BasePermission):
             if request.user.is_superuser:
                 return True
             if org_membership.exists() and org_membership[0].role == 'ADMIN':
+                return True
+
+        return False
+
+class CheckCommentPermission(permissions.BasePermission):
+    """
+    Permission used in ListCreate Comment APIView:
+    > Everyone can create a Comment, but only IN a project/company where he belongs
+    > Everyone but but basic project member can list Comments
+    """
+    def has_permission(self, request, view):
+        project = get_object_or_404(Project, id=view.kwargs['pk'])
+        organization = project.organization
+        org_membership = organization.members.through.objects.filter(
+                user=request.user,
+                organization=organization
+        )
+        project_membership = project.members.filter(id=request.user.id)
+
+        if request.method == 'GET':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() or (project_membership.exists() and project_membership[0].role == 'OWNER'):
+                return True
+
+        if request.method == 'POST':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() or project_membership.exists():
+                return True
+
+        return False
+
+
+class CheckCommentObjPermission(permissions.BasePermission):
+    """
+    Permission used in RetrieveUpdateDestroy Comment APIView:
+    > Only org admins can update or delete a comment (+ owner of the Comment)
+    > Everyone but basic project member can retrieve a Comment details (as long as they belong to the project/company)
+    """
+    def has_object_permission(self, request, view, obj):
+        project = obj.project
+        organization = obj.project.organization
+        org_membership = organization.members.through.objects.filter(
+                user=request.user,
+                organization=organization
+        )
+        project_membership = project.members.filter(id=request.user.id)
+
+        if request.method == 'GET':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() or (project_membership.exists() and project_membership[0].role == 'OWNER'):
+                return True
+
+        if request.method == 'PATCH':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() and org_membership[0].role == 'ADMIN':
+                return True
+        
+        if request.method == 'DELETE':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() and org_membership[0].role == 'ADMIN':
+                return True
+            if obj.created_by == request.user:
                 return True
 
         return False

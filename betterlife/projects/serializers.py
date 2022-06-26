@@ -18,7 +18,14 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
         read_only_fields = ['project', 'created_at', 'updated_at']
 
 class CommentSerializer(serializers.ModelSerializer):
+    answers = serializers.SerializerMethodField()
+
     class Meta:
         model = Comment
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['project', 'created_by', 'created_at', 'updated_at']
+
+    def get_answers(self, obj):
+        comments = Comment.objects.filter(reply_to_comment=obj.id)
+        comments_serialized = CommentSerializer(comments, many=True)
+        return comments_serialized.data

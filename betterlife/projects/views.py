@@ -7,6 +7,8 @@ from .permissions import (
     CheckProjectObjPermission,
     CheckProjectMemberPermission,
     CheckProjectMemberObjPermission,
+    CheckCommentPermission,
+    CheckCommentObjPermission,
 )
 from .serializers import (
     ProjectSerializer,
@@ -82,3 +84,41 @@ class RetrieveUpdateDestroyProjectMember(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, CheckProjectMemberObjPermission]
     serializer_class = ProjectMemberSerializer
     lookup_field = 'pk'
+
+class ListCreateComment(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, CheckCommentPermission]
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
+    pagination_class = x20ResultsPerPage
+
+    def get_queryset(self):
+        project_id = self.kwargs['pk']
+        project = get_object_or_404(Project, id=project_id)
+
+        return Comment.objects.filter(project=project, reply_to_comment=None)
+    
+    def perform_create(self, serializer):
+        organization_id = self.kwargs['pk']
+        project = get_object_or_404(Project, id=organization_id)
+        serializer.save(
+            project=project,
+            created_by=self.request.user
+        )
+
+class RetrieveUpdateDestroyComment(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    permission_classes = [IsAuthenticated, CheckCommentObjPermission]
+    serializer_class = CommentSerializer
+    lookup_field = 'pk'
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Soft-delete if the comment has at least 1 reply
+        has_replies = Comment.objects.filter(reply_to_comment=instance).exists()
+        if has_replies:
+            instance.content = '<deleted comment>'
+            instance.save()
+            return Response({'status':'Comment was soft-deleted'}, status=status.HTTP_204_NO_CONTENT)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
