@@ -6,6 +6,7 @@ from .permissions import (
     CheckProjectPermission,
     CheckProjectObjPermission,
     CheckProjectMemberPermission,
+    CheckProjectMemberObjPermission,
 )
 from .serializers import (
     ProjectSerializer,
@@ -70,3 +71,14 @@ class ListCreateProjectMember(generics.ListCreateAPIView):
         project = get_object_or_404(Project, id=project_id)
 
         return ProjectMember.objects.filter(project=project)
+    
+    def perform_create(self, serializer):
+        organization_id = self.kwargs['pk']
+        project = get_object_or_404(Project, id=organization_id)
+        serializer.save(project=project)
+
+class RetrieveUpdateDestroyProjectMember(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProjectMember.objects.all()
+    permission_classes = [IsAuthenticated, CheckProjectMemberObjPermission]
+    serializer_class = ProjectMemberSerializer
+    lookup_field = 'pk'

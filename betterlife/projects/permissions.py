@@ -29,7 +29,7 @@ class CheckProjectPermission(permissions.BasePermission):
 
 class CheckProjectObjPermission(permissions.BasePermission):
     """
-    Permission used in RetrieveUpdateDestroyAPIView:
+    Permission used in RetrieveUpdateDestroy APIView:
     > Any members of an organization can retreve one of its projects details.
     > Only org. admin, project owner, or project member can edit a project.
     > Only org. admin or project owner can delete a project.
@@ -69,7 +69,7 @@ class CheckProjectObjPermission(permissions.BasePermission):
 
 class CheckProjectMemberPermission(permissions.BasePermission):
     """
-    Permission used in ListCreateProjectMemberAPIView:
+    Permission used in ListCreate ProjectMember APIView:
     > The list of project members is only available to company/project members
     > Only org admins can create a new project member
     """
@@ -81,7 +81,6 @@ class CheckProjectMemberPermission(permissions.BasePermission):
                 organization=organization
         )
         project_membership = project.members.filter(id=request.user.id)
-        print(request.user, org_membership, project_membership)
 
         if request.method == 'GET':
             if request.user.is_superuser:
@@ -90,6 +89,43 @@ class CheckProjectMemberPermission(permissions.BasePermission):
                 return True
 
         if request.method == 'POST':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() and org_membership[0].role == 'ADMIN':
+                return True
+
+        return False
+
+
+class CheckProjectMemberObjPermission(permissions.BasePermission):
+    """
+    Permission used in RetrieveUpdateDestroy ProjectMember APIView:
+    > The list of project members is only available to company/project members
+    > Only org admins can create a new project member
+    """
+    def has_object_permission(self, request, view, obj):
+        project = obj.project
+        organization = obj.project.organization
+        org_membership = organization.members.through.objects.filter(
+                user=request.user,
+                organization=organization
+        )
+        project_membership = project.members.filter(id=request.user.id)
+
+        print(request.user, org_membership, project_membership)
+        if request.method == 'GET':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() or project_membership.exists():
+                return True
+
+        if request.method == 'PATCH':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() and org_membership[0].role == 'ADMIN':
+                return True
+        
+        if request.method == 'DELETE':
             if request.user.is_superuser:
                 return True
             if org_membership.exists() and org_membership[0].role == 'ADMIN':

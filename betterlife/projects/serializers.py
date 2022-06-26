@@ -15,7 +15,7 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMember
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['project', 'created_at', 'updated_at']
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
