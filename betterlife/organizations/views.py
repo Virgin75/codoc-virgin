@@ -57,10 +57,13 @@ class ListCreateOrganizationMember(generics.ListCreateAPIView):
 
     def get_queryset(self):
         organization_id = self.kwargs['pk']
-        print(organization_id)
         organization = get_object_or_404(Organization, id=organization_id)
-
         return OrganizationMember.objects.filter(organization=organization)
+    
+    def perform_create(self, serializer):
+        organization_id = self.kwargs['pk']
+        organization = get_object_or_404(Organization, id=organization_id)
+        serializer.save(organization=organization)
 
 class RetrieveUpdateDestroyOrganizationMember(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrganizationMember.objects.all()

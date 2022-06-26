@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import (
     CheckProjectPermission,
     CheckProjectObjPermission,
+    CheckProjectMemberPermission,
 )
 from .serializers import (
     ProjectSerializer,
@@ -32,6 +33,25 @@ class ListCreateProject(generics.ListCreateAPIView):
         )
         queryset = Project.objects.filter(organization=membership.organization)
         return queryset
+    
+    '''
+    Override create method to set the user who created the Project
+    as a member of the Project (role = Owner).
+    '''
+    def perform_create(self, serializer):
+        return serializer.save()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        project = self.perform_create(serializer)
+        project.members.add(
+            request.user,
+            through_defaults={'role': 'OWNER'}
+        )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class RetrieveUpdateDestroyProject(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
@@ -40,15 +60,13 @@ class RetrieveUpdateDestroyProject(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
 class ListCreateProjectMember(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, CheckProjectPermission]
-    serializer_class = ProjectSerializer
-    queryset = Project.objects.all()
+    permission_classes = [IsAuthenticated, CheckProjectMemberPermission]
+    serializer_class = ProjectMemberSerializer
+    queryset = ProjectMember.objects.all()
     pagination_class = x20ResultsPerPage
 
     def get_queryset(self):
-        membership = get_object_or_404(
-            OrganizationMember,
-            user=self.request.user
-        )
-        queryset = Project.objects.filter(organization=membership.organization)
-        return queryset
+        project_id = self.kwargs['pk']
+        project = get_object_or_404(Project, id=project_id)
+
+        return ProjectMember.objects.filter(project=project)

@@ -52,7 +52,7 @@ class CheckOrganizationMemberPermission(permissions.BasePermission):
         if request.method == 'POST':
             if request.user.is_superuser:
                 return True
-            organization_id = request.data['organization']
+            organization_id = view.kwargs['pk']
             organization = get_object_or_404(Organization, id=organization_id)
             membership = get_object_or_404(OrganizationMember, user=request.user, organization=organization)
             if membership.role == 'ADMIN':

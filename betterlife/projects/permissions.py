@@ -66,3 +66,33 @@ class CheckProjectObjPermission(permissions.BasePermission):
                 return True
               
         return False
+
+class CheckProjectMemberPermission(permissions.BasePermission):
+    """
+    Permission used in ListCreateProjectMemberAPIView:
+    > The list of project members is only available to company/project members
+    > Only org admins can create a new project member
+    """
+    def has_permission(self, request, view):
+        project = get_object_or_404(Project, id=view.kwargs['pk'])
+        organization = project.organization
+        org_membership = organization.members.through.objects.filter(
+                user=request.user,
+                organization=organization
+        )
+        project_membership = project.members.filter(id=request.user.id)
+        print(request.user, org_membership, project_membership)
+
+        if request.method == 'GET':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() or project_membership.exists():
+                return True
+
+        if request.method == 'POST':
+            if request.user.is_superuser:
+                return True
+            if org_membership.exists() and org_membership[0].role == 'ADMIN':
+                return True
+
+        return False
