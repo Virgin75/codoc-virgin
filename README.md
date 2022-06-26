@@ -6,7 +6,7 @@ You can access the list of all the available endpoints of the API here : https:/
 # How to setup the API locally?
 Follow the following steps:
 1. Clone this repo locally : ```gh repo clone Virgin75/codoc-virgin``` (via GitHub CLI) and then ```cd codoc-virgin/betterlife```
-2. Create a virtual env and activate it : ```python3 -m venv -env``` and ```source env/bin/activate```
+2. Create a virtual env and activate it : ```python3 -m venv env``` and ```source env/bin/activate```
 3. Install the dependencies : ```pip3 install -r requirements.txt```
 4. Make the migrations, migrate and run the test server : ```python manage.py makemigrations && python manage.py migrate && python manage.py runserver```
 5. Create a super user if needed : ```python manage.py createsuperuser```
