@@ -39,3 +39,16 @@ class RetrieveUpdateDestroyProject(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
     lookup_field = 'pk'
 
+class ListCreateProjectMember(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, CheckProjectPermission]
+    serializer_class = ProjectSerializer
+    queryset = Project.objects.all()
+    pagination_class = x20ResultsPerPage
+
+    def get_queryset(self):
+        membership = get_object_or_404(
+            OrganizationMember,
+            user=self.request.user
+        )
+        queryset = Project.objects.filter(organization=membership.organization)
+        return queryset

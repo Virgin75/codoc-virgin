@@ -44,7 +44,7 @@ class CheckOrganizationMemberPermission(permissions.BasePermission):
         if request.method == 'GET':
             if request.user.is_superuser:
                 return True
-            organization_id = request.GET.get('organization_id')
+            organization_id = view.kwargs['pk']
             organization = get_object_or_404(Organization, id=organization_id)
             membership = get_object_or_404(OrganizationMember, user=request.user, organization=organization)
             if membership:

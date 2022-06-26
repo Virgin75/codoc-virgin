@@ -9,6 +9,6 @@ from .views import (
 urlpatterns = [
     path('organizations', ListCreateOrganization.as_view(), name="listcreateorg"),
     path('organizations/<int:pk>', RetrieveUpdateDestroyOrganization.as_view(), name="retrieveupdatedestroyorg"),
-    path('members', ListCreateOrganizationMember.as_view(), name="listcreateorgmembers"),
+    path('organizations/<int:pk>/members', ListCreateOrganizationMember.as_view(), name="listcreateorgmembers"),
     path('memberships/<int:pk>', RetrieveUpdateDestroyOrganizationMember.as_view(), name="retrieveupdatedestroyorgmember"),
 ]

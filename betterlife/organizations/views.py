@@ -56,7 +56,8 @@ class ListCreateOrganizationMember(generics.ListCreateAPIView):
     pagination_class = x20ResultsPerPage
 
     def get_queryset(self):
-        organization_id = self.request.GET.get('organization_id')
+        organization_id = self.kwargs['pk']
+        print(organization_id)
         organization = get_object_or_404(Organization, id=organization_id)
 
         return OrganizationMember.objects.filter(organization=organization)
