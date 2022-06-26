@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .permissions import (
     CheckProjectPermission,
+    CheckProjectObjPermission,
 )
 from .serializers import (
     ProjectSerializer,
@@ -31,3 +32,10 @@ class ListCreateProject(generics.ListCreateAPIView):
         )
         queryset = Project.objects.filter(organization=membership.organization)
         return queryset
+
+class RetrieveUpdateDestroyProject(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Project.objects.all()
+    permission_classes = [IsAuthenticated, CheckProjectObjPermission]
+    serializer_class = ProjectSerializer
+    lookup_field = 'pk'
+
